@@ -1,0 +1,58 @@
+name: Build, Test, Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    name: Build & Test .NET 8
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checks out the repository code onto the runner so subsequent
+      # steps can access the source files.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Installs the exact .NET 8 SDK version on the runner.
+      # Required since ubuntu-latest does not ship with .NET 8 by default.
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      # Downloads all NuGet packages defined in the project files.
+      # Separated from build so dependency resolution errors are reported clearly.
+      - name: Restore dependencies
+        run: dotnet restore
+
+      # Compiles the solution in Release mode.
+      # --no-restore skips a redundant restore since the previous step already did it.
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      # Runs all unit tests in the solution.
+      # --no-build reuses the binaries from the build step above, saving time.
+      - name: Run tests
+        run: dotnet test --no-build --configuration Release --verbosity normal
+
+      # Publishes the Function App as a self-contained deployment package
+      # into the ./publish folder, ready to be picked up by a deploy job.
+      - name: Publish Function App
+        run: dotnet publish Digital.D365.Account.API/Digital.D365.Account.API.csproj \
+          --no-restore \
+          --configuration Release \
+          --output ./publish
+
+      # Uploads the published output as a workflow artifact.
+      # This allows the CD workflow to download and deploy it without rebuilding.
+      # Retention is kept short (1 day) since artifacts are only needed for
+      # the immediately following deploy job.
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: function-app
+          path: ./publish
+          retention-days: 1

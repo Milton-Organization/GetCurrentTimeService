@@ -41,7 +41,7 @@ jobs:
       # Publishes the Function App as a self-contained deployment package
       # into the ./publish folder, ready to be picked up by a deploy job.
       - name: Publish Function App
-        run: dotnet publish Digital.D365.Account.API/Digital.D365.Account.API.csproj \
+        run: dotnet publish GetCurrentTimeService/GetCurrentTimeService.csproj \
           --no-restore \
           --configuration Release \
           --output ./publish

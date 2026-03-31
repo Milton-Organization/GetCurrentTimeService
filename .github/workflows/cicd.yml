@@ -42,10 +42,11 @@ jobs:
       # Publishes the Function App as a self-contained deployment package
       # into the ./publish folder, ready to be picked up by a deploy job.
       - name: Publish Function App
-        run: dotnet publish GetCurrentTimeService/GetCurrentTimeService.csproj \
-          --no-restore \
-          --configuration Release \
-          --output ./publish
+        run: |
+          dotnet publish GetCurrentTimeService/GetCurrentTimeService.csproj \
+              --no-restore \
+              --configuration Release \
+              --output ./publish
 
       # Uploads the published output as a workflow artifact.
       # This allows the CD workflow to download and deploy it without rebuilding.
